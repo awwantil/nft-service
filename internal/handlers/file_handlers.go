@@ -2,13 +2,13 @@
 package handler
 
 import (
-	"github.com/awwantil/nft-service/internal/service"
-	
+	"github.com/gofiber/fiber/v2"
+	"main/internal/service"
 )
 
 // UploadFileHandler обрабатывает загрузку файла.
 func UploadFileHandler(c *fiber.Ctx) error {
-	// Получаем файл из multipart-формы "file"
+	// Получение файла из формы является стандартной практикой для Fiber
 	// Источник: https://docs.gofiber.io/recipes/upload-file/
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -19,8 +19,8 @@ func UploadFileHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Вызываем сервис для добавления файла в IPFS
-	addResponse, err := service.AddFileToIPFS(file)
+	// Вызываем обновленный сервис, который возвращает больше данных
+	addResponse, cidV1, gatewayURL, err := service.AddFileToIPFS(file)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "error",
@@ -29,12 +29,18 @@ func UploadFileHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Возвращаем успешный ответ с данными о файле
-	// Источник: https://medium.com/@m7adeel/golang-backend-image-upload-api-887e07e5a70b
+	// Формируем расширенный JSON-ответ.
+	// Источник: https://dev.to/hackmamba/robust-media-upload-with-golang-and-cloudinary-fiber-version-2cmf
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Файл успешно загружен в IPFS",
-		"data":    addResponse,
+		"data": fiber.Map{
+			"name":       addResponse.Name,
+			"size":       addResponse.Size,
+			"cidV0":      addResponse.Hash,
+			"cidV1":      cidV1,
+			"gatewayUrl": gatewayURL,
+		},
 	})
 }
 

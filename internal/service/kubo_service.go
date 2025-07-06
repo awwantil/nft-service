@@ -5,64 +5,72 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ipfs/go-cid"
 	"io"
+	"main/internal/model"
 	"mime/multipart"
 	"net/http"
-
-	"github.com/your-username/go-kubo-service/model"
 )
 
 const kuboApiBaseUrl = "http://127.0.0.1:5001/api/v0"
+const kuboGatewayUrlTemplate = "http://%s.ipfs.localhost:8080/"
 
 // AddFileToIPFS загружает файл в узел Kubo и возвращает информацию о нем.
-func AddFileToIPFS(fileHeader *multipart.FileHeader) (*model.AddResponse, error) {
-	// Открываем файл, полученный из запроса
-	// Источник: https://dev.to/hackmamba/robust-media-upload-with-golang-and-cloudinary-fiber-version-2cmf
+func AddFileToIPFS(fileHeader *multipart.FileHeader) (*model.AddResponse, string, string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
-		return nil, fmt.Errorf("не удалось открыть файл: %w", err)
+		return nil, "", "", fmt.Errorf("не удалось открыть файл: %w", err)
 	}
 	defer file.Close()
 
-	// Создаем тело multipart/form-data для отправки в Kubo API
-	// Источник: https://freshman.tech/file-upload-golang/
 	var requestBody bytes.Buffer
 	writer := multipart.NewWriter(&requestBody)
 	part, err := writer.CreateFormFile("file", fileHeader.Filename)
 	if err != nil {
-		return nil, fmt.Errorf("не удалось создать form-file: %w", err)
+		return nil, "", "", fmt.Errorf("не удалось создать form-file: %w", err)
 	}
 	if _, err := io.Copy(part, file); err != nil {
-		return nil, fmt.Errorf("не удалось скопировать данные файла: %w", err)
+		return nil, "", "", fmt.Errorf("не удалось скопировать данные файла: %w", err)
 	}
 	writer.Close()
 
-	// Отправляем POST-запрос на эндпоинт /api/v0/add
-	// Источник: https://github.com/ipfs/kubo (упоминание RPC API)
+	// Документация на Kubo RPC API подтверждает использование этого эндпоинта
+	// Источник: https://docs.ipfs.tech/reference/kubo/rpc/
 	req, err := http.NewRequest("POST", kuboApiBaseUrl+"/add", &requestBody)
 	if err != nil {
-		return nil, fmt.Errorf("не удалось создать запрос к Kubo: %w", err)
+		return nil, "", "", fmt.Errorf("не удалось создать запрос к Kubo: %w", err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выполнении запроса к Kubo: %w", err)
+		return nil, "", "", fmt.Errorf("ошибка при выполнении запроса к Kubo: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("Kubo API вернул ошибку: %s, тело ответа: %s", resp.Status, string(bodyBytes))
+		return nil, "", "", fmt.Errorf("Kubo API вернул ошибку: %s, тело ответа: %s", resp.Status, string(bodyBytes))
 	}
 
 	var addResp model.AddResponse
 	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		return nil, fmt.Errorf("не удалось декодировать ответ от Kubo: %w", err)
+		return nil, "", "", fmt.Errorf("не удалось декодировать ответ от Kubo: %w", err)
 	}
 
-	return &addResp, nil
+	// --- Начало новой логики ---
+	// Декодируем полученный CIDv0 (начинается с "Qm")
+	// Источник: https://pkg.go.dev/github.com/ipfs/go-cid#Decode
+	cidV0, err := cid.Decode(addResp.Hash)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("не удалось декодировать CID: %w", err)
+	}
+
+	cidV1 := cid.NewCidV1(cid.DagProtobuf, cidV0.Hash())
+	gatewayURL := fmt.Sprintf(kuboGatewayUrlTemplate, cidV1.String())
+
+	return &addResp, cidV1.String(), gatewayURL, nil
 }
 
 // PinCID закрепляет (pins) CID на узле Kubo.
