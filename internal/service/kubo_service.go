@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/ipfs/go-cid"
 	"io"
-	"main/internal/model"
+	"main/internal/models"
 	"mime/multipart"
 	"net/http"
 )
