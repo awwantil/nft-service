@@ -1,10 +1,22 @@
-// handler/file_handlers.go
-package handler
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"main/internal/service"
+	"main/tools/pkg/logger"
 )
+
+// KuboHandlers
+type KuboHandlers struct {
+	logger *logger.Logger
+}
+
+// NewAuthHandlers конструктор для обработчиков IDM методов
+func NewKuboHandlers(logger *logger.Logger) *KuboHandlers {
+	return &KuboHandlers{
+		logger: logger,
+	}
+}
 
 // UploadFileHandler обрабатывает загрузку файла.
 func UploadFileHandler(c *fiber.Ctx) error {

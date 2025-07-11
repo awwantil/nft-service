@@ -16,7 +16,7 @@ const kuboApiBaseUrl = "http://127.0.0.1:5001/api/v0"
 const kuboGatewayUrlTemplate = "http://%s.ipfs.localhost:8080/"
 
 // AddFileToIPFS загружает файл в узел Kubo и возвращает информацию о нем.
-func AddFileToIPFS(fileHeader *multipart.FileHeader) (*model.AddResponse, string, string, error) {
+func AddFileToIPFS(fileHeader *multipart.FileHeader) (*models.AddResponse, string, string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return nil, "", "", fmt.Errorf("не удалось открыть файл: %w", err)
@@ -54,7 +54,7 @@ func AddFileToIPFS(fileHeader *multipart.FileHeader) (*model.AddResponse, string
 		return nil, "", "", fmt.Errorf("Kubo API вернул ошибку: %s, тело ответа: %s", resp.Status, string(bodyBytes))
 	}
 
-	var addResp model.AddResponse
+	var addResp models.AddResponse
 	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
 		return nil, "", "", fmt.Errorf("не удалось декодировать ответ от Kubo: %w", err)
 	}
@@ -74,7 +74,7 @@ func AddFileToIPFS(fileHeader *multipart.FileHeader) (*model.AddResponse, string
 }
 
 // PinCID закрепляет (pins) CID на узле Kubo.
-func PinCID(cid string) (*model.PinResponse, error) {
+func PinCID(cid string) (*models.PinResponse, error) {
 	// Эндпоинт для закрепления: /api/v0/pin/add
 	// Источник: https://github.com/ipfs/kubo
 	url := fmt.Sprintf("%s/pin/add?arg=%s", kuboApiBaseUrl, cid)
@@ -94,7 +94,7 @@ func PinCID(cid string) (*model.PinResponse, error) {
 		return nil, fmt.Errorf("Kubo API (pin) вернул ошибку: %s", resp.Status)
 	}
 
-	var pinResp model.PinResponse
+	var pinResp models.PinResponse
 	if err := json.NewDecoder(resp.Body).Decode(&pinResp); err != nil {
 		return nil, fmt.Errorf("не удалось декодировать ответ от Kubo (pin): %w", err)
 	}
@@ -102,7 +102,7 @@ func PinCID(cid string) (*model.PinResponse, error) {
 }
 
 // UnpinCID открепляет (unpins) CID с узла Kubo.
-func UnpinCID(cid string) (*model.PinResponse, error) {
+func UnpinCID(cid string) (*models.PinResponse, error) {
 	// Эндпоинт для открепления: /api/v0/pin/rm
 	// Источник: https://github.com/ipfs/kubo
 	url := fmt.Sprintf("%s/pin/rm?arg=%s", kuboApiBaseUrl, cid)
@@ -122,7 +122,7 @@ func UnpinCID(cid string) (*model.PinResponse, error) {
 		return nil, fmt.Errorf("Kubo API (unpin) вернул ошибку: %s", resp.Status)
 	}
 
-	var unpinResp model.PinResponse
+	var unpinResp models.PinResponse
 	if err := json.NewDecoder(resp.Body).Decode(&unpinResp); err != nil {
 		return nil, fmt.Errorf("не удалось декодировать ответ от Kubo (unpin): %w", err)
 	}
@@ -130,7 +130,7 @@ func UnpinCID(cid string) (*model.PinResponse, error) {
 }
 
 // ListPinnedCIDs возвращает список всех закрепленных CID.
-func ListPinnedCIDs() (*model.PinLsResponse, error) {
+func ListPinnedCIDs() (*models.PinLsResponse, error) {
 	// Эндпоинт для получения списка закрепленных объектов: /api/v0/pin/ls
 	// Источник: https://github.com/ipfs/kubo
 	url := fmt.Sprintf("%s/pin/ls", kuboApiBaseUrl)
@@ -150,7 +150,7 @@ func ListPinnedCIDs() (*model.PinLsResponse, error) {
 		return nil, fmt.Errorf("Kubo API (ls) вернул ошибку: %s", resp.Status)
 	}
 
-	var lsResp model.PinLsResponse
+	var lsResp models.PinLsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&lsResp); err != nil {
 		return nil, fmt.Errorf("не удалось декодировать ответ от Kubo (ls): %w", err)
 	}

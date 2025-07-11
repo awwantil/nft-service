@@ -1,0 +1,3 @@
+"time":"2025-07-11T19:07:28.848780552+03:00","level":"INFO","msg":"Create server"}
+{"time":"2025-07-11T19:07:28.851088077+03:00","level":"INFO","msg":"Creating internal handlers"}
+{"time":"2025-07-11T19:07:28.851869467+03:00","level":"INFO","msg":"Service api gateway starts","address":"0.0.0.0:3010"}

@@ -1,4 +1,3 @@
-// models/kubo.go
 package models
 
 // AddResponse представляет ответ от /api/v0/add

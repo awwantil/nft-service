@@ -4,6 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"log"
+	"time"
 )
 
 // App параметры для запуска приложения
@@ -19,6 +20,14 @@ type Logging struct {
 	DSN   string `envconfig:"LOG_DSN"`
 }
 
+// JWT конфигурация для работы с JWT
+type JWT struct {
+	Secret         string        `envconfig:"JWT_SECRET"`
+	Method         string        `envconfig:"JWT_METHOD"`
+	AuthExpired    time.Duration `envconfig:"JWT_AUTH_EXPIRED"`
+	RefreshExpired time.Duration `envconfig:"JWT_REFRESH_EXPIRED"`
+}
+
 // Database конфигурация подключения к БД
 type Database struct {
 	URI      string `envconfig:"DB_URI"`
@@ -27,6 +36,16 @@ type Database struct {
 	User     string `envconfig:"DB_USER"`
 	Password string `envconfig:"DB_PASSWORD"`
 	Name     string `envconfig:"DB_NAME"`
+}
+
+// Redis конфигурация для подключения к БД
+type Redis struct {
+	Host     string `envconfig:"REDIS_HOST"`      // Redis server host
+	Port     string `envconfig:"REDIS_PORT"`      // Redis server port
+	Database int    `envconfig:"REDIS_DB"`        // Redis database number
+	Username string `envconfig:"REDIS_USERNAME"`  // Redis username
+	Password string `envconfig:"REDIS_PASSWORD"`  // Redis password
+	CertPath string `envconfig:"REDIS_CERT_PATH"` // Path to Redis TLS certificate
 }
 
 // Load метод для чтения конфига из окружения или .env файла

@@ -3,7 +3,7 @@ package validator
 import (
 	"net/mail"
 
-	tvoerrors "evogit.3vo.me/3vo/back-end/tools/pkg/tvo_errors"
+	tvoerrors "main/tools/pkg/tvo_errors"
 )
 
 // ValidEmail function validates the given email address.
