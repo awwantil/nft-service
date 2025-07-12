@@ -88,7 +88,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, phone, password string
 	salt := tools.GenerateRandomSalt(tools.SaltSize)
 	hashPassword := tools.HashPassword(password, ur.secret, salt)
 
-	query := "INSERT INTO users (phone, password, salt, role_id, telegram_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, role_id, telegram_id"
+	query := "INSERT INTO users (phone, password, salt, role_id) VALUES ($1, $2, $3, $4) RETURNING id, role_id"
 	if err := ur.db.QueryRow(ctx, query, phone, hashPassword, salt, tvomodels.USER).
 		Scan(&user.ID, &user.RoleID); err != nil {
 		return nil, tvoerrors.Wrap(op, err)

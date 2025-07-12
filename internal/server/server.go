@@ -58,7 +58,7 @@ func AddRoutes(app *fiber.App, authHandlers *handlers.AuthHandlers, kuboHandlers
 		WithTraceID:        true,
 	}), recover.New())
 
-	// router := app.Use()
+	//router := app.Use()
 
 	addRoutesV1(v1Router, authHandlers, kuboHandlers, logger)
 }
@@ -92,15 +92,11 @@ func checkAuthToken(logger *logger.Logger) httpmiddlewares.CheckTokenCallback {
 // addRoutesV1 добавляем роутинг для версии API v1
 func addRoutesV1(v1Router fiber.Router, authHandlers *handlers.AuthHandlers, kuboHandlers *handlers.KuboHandlers,
 	logger *logger.Logger) fiber.Router {
-	// версия API 1.0
-
-	// middleware для авторизации
 	authMiddleware := httpmiddlewares.NewAuthMiddleware(checkAuthToken(logger), false, logger)
 	//guestMiddleware := httpmiddlewares.NewAuthMiddleware(checkAuthToken(logger), true, logger)
 
 	// системные урлы
 
-	// методы сервиса IDM
 	idm := v1Router.Group("/auth")
 
 	// публичные методы

@@ -74,27 +74,30 @@ func (h *AuthHandlers) Registration(c *fiber.Ctx) (interface{}, error) {
 	if err := httputils.ParseRequestBody(c, &request, "Registration", h.logger); err != nil {
 		return nil, tvoerrors.ErrInvalidRequestData
 	}
+	if request.Code != "98765" {
+		return nil, status.Error(codes.InvalidArgument, "invalid code") //nolint
+	}
 	if err := validator.ValidPhone(request.Phone); err != nil {
 		log.Error("Invalid phone number", "error", err)
 		return nil, status.Error(codes.InvalidArgument, "invalid phone number") //nolint
 	}
 
-	phoneExists, err := h.userRepository.PhoneExists(ctx, request.Phone)
-	if err != nil {
-		if !errors.Is(err, tvoerrors.ErrNotFound) {
-			log.Error("Find phone error", "error", err)
-			return nil, status.Error(codes.Internal, "something went wrong") //nolint
-		}
-	}
+	//phoneExists, err := h.userRepository.PhoneExists(ctx, request.Phone)
+	//if err != nil {
+	//	if !errors.Is(err, tvoerrors.ErrNotFound) {
+	//		log.Error("Find phone error", "error", err)
+	//		return nil, status.Error(codes.Internal, "something went wrong") //nolint
+	//	}
+	//}
+	//
+	//if phoneExists {
+	//	log.Error("Phone exists", "phone", request.Phone, "error", ErrPhoneTaken)
+	//	return nil, status.Error(codes.InvalidArgument, "phone already taken") //nolint
+	//}
 
-	if phoneExists {
-		log.Error("Phone exists", "phone", request.Phone, "error", ErrPhoneTaken)
-		return nil, status.Error(codes.InvalidArgument, "phone already taken") //nolint
-	}
-
-	_, err = h.userRepository.CreateUser(ctx, request.Phone, request.Password)
+	_, err := h.userRepository.CreateUser(ctx, request.Phone, request.Password)
 	if err != nil {
-		log.Error("Error creating user", "error", err)
+		log.Error("Error creating user ", "error", err)
 		return nil, status.Error(codes.Internal, "something went wrong") //nolint
 	}
 
