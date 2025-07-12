@@ -1,0 +1,39 @@
+version: '3.8'
+
+volumes:
+  postgres-data:
+  postgres-data-2:
+
+services:
+  db:
+    image: postgres:alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5434:5432"
+  redis:
+    image: redis:alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB}
+    ports:
+      - "6382:6379"
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs-node
+    restart: unless-stopped
+    volumes:
+      - ./ipfs-data:/data/ipfs
+    ports:
+      - "4001:4001"
+      - "4001:4001/udp"
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:5001:5001"

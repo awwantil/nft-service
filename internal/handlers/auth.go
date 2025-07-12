@@ -82,20 +82,19 @@ func (h *AuthHandlers) Registration(c *fiber.Ctx) (interface{}, error) {
 		return nil, status.Error(codes.InvalidArgument, "invalid phone number") //nolint
 	}
 
-	//phoneExists, err := h.userRepository.PhoneExists(ctx, request.Phone)
-	//if err != nil {
-	//	if !errors.Is(err, tvoerrors.ErrNotFound) {
-	//		log.Error("Find phone error", "error", err)
-	//		return nil, status.Error(codes.Internal, "something went wrong") //nolint
-	//	}
-	//}
-	//
-	//if phoneExists {
-	//	log.Error("Phone exists", "phone", request.Phone, "error", ErrPhoneTaken)
-	//	return nil, status.Error(codes.InvalidArgument, "phone already taken") //nolint
-	//}
+	phoneExists, err := h.userRepository.PhoneExists(ctx, request.Phone)
+	if err != nil {
+		if !errors.Is(err, tvoerrors.ErrNotFound) {
+			log.Error("Find phone error", "error", err)
+			return nil, status.Error(codes.Internal, "something went wrong") //nolint
+		}
+	}
+	if phoneExists {
+		log.Error("Phone exists", "phone", request.Phone, "error", ErrPhoneTaken)
+		return nil, status.Error(codes.InvalidArgument, "phone already taken") //nolint
+	}
 
-	_, err := h.userRepository.CreateUser(ctx, request.Phone, request.Password)
+	_, err = h.userRepository.CreateUser(ctx, request.Phone, request.Password)
 	if err != nil {
 		log.Error("Error creating user ", "error", err)
 		return nil, status.Error(codes.Internal, "something went wrong") //nolint

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"main/internal/dto"
 	"time"
 
 	"main/internal/models"
@@ -36,4 +37,8 @@ type UserRepository interface {
 	DigUpUser(ctx context.Context, id int64) (*models.User, error)
 	UpdatePhone(ctx context.Context, phone string, id int64) error
 	ChangeRole(ctx context.Context, id, roleId int64) error
+}
+
+type NftDataRepository interface {
+	CreateNftData(ctx context.Context, nftData *dto.NftData) error
 }

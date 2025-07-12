@@ -20,8 +20,6 @@ func NewKuboHandlers(logger *logger.Logger) *KuboHandlers {
 
 // UploadFileHandler обрабатывает загрузку файла.
 func UploadFileHandler(c *fiber.Ctx) error {
-	// Получение файла из формы является стандартной практикой для Fiber
-	// Источник: https://docs.gofiber.io/recipes/upload-file/
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

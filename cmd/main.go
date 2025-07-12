@@ -68,30 +68,19 @@ func main() {
 	userRepository := postgresql.NewUserRepository(db, cfg.Secret)
 	tokenRepository := postgresql.NewUserTokenRepository(db, cfg.App.Debug)
 	roleRepository := postgresql.NewRoleRepository(db)
+	nftDataRepository := postgresql.NewNftDataRepository(db)
 	jwt := jwtManager.NewJWTManager(&cfg.JWT)
 
 	logger.Info("Create server")
-
-	//app := fiber.New()
-	//
-	//api := app.Group("/api/v1")
-	//
-	//api.Post("/files", handlers.UploadFileHandler)
-	//// Маршруты для управления закреплением (pin)
-	//api.Post("/pins/:cid", handlers.PinCidHandler)
-	//api.Delete("/pins/:cid", handlers.UnpinCidHandler)
-	//api.Get("/pins", handlers.ListPinsHandler)
-	//
-	//// Источник: https://medium.com/@m7adeel/golang-backend-image-upload-api-887e07e5a70b
-	//log.Fatal(app.Listen(":3000"))
 
 	app := server.NewServer()
 	logger.Info("Creating internal handlers")
 	authHandlers := handlers.NewAuthHandlers(logger, jwt, userRepository, tokenRepository, roleRepository, cacheClient, cfg.Secret)
 	kuboHandlers := handlers.NewKuboHandlers(logger)
+	nftDataHandlers := handlers.NewNftHandlers(logger, nftDataRepository)
 
 	// добавляем роуты для экземпляра сервера
-	server.AddRoutes(app, authHandlers, kuboHandlers, logger)
+	server.AddRoutes(app, authHandlers, kuboHandlers, nftDataHandlers, logger)
 
 	logger.Info("Service api gateway starts", "address", cfg.App.Addr)
 	if err = app.Listen(cfg.App.Addr); err != nil {

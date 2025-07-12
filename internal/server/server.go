@@ -35,14 +35,10 @@ func NewServer() *fiber.App {
 	return app
 }
 
-// AddRoutes добавляет роуты к серверу
 func AddRoutes(app *fiber.App, authHandlers *handlers.AuthHandlers, kuboHandlers *handlers.KuboHandlers,
-	logger *logger.Logger) {
-	// helpful middlewares
+	nftHandlers *handlers.NftHandlers, logger *logger.Logger) {
 	app.Use(healthcheck.New())
 
-	// добавляем API v1
-	// v1Router := app.Group("/v1", slogfiber.New(logger.Logger), recover.New())
 	v1Router := app.Group("/v1", slogfiber.NewWithConfig(logger.Logger, slogfiber.Config{
 		DefaultLevel:     slog.LevelInfo,
 		ClientErrorLevel: slog.LevelWarn,
@@ -58,9 +54,7 @@ func AddRoutes(app *fiber.App, authHandlers *handlers.AuthHandlers, kuboHandlers
 		WithTraceID:        true,
 	}), recover.New())
 
-	//router := app.Use()
-
-	addRoutesV1(v1Router, authHandlers, kuboHandlers, logger)
+	addRoutesV1(v1Router, authHandlers, kuboHandlers, nftHandlers, logger)
 }
 
 // checkAuthToken утилита для проверки токена
@@ -91,36 +85,37 @@ func checkAuthToken(logger *logger.Logger) httpmiddlewares.CheckTokenCallback {
 
 // addRoutesV1 добавляем роутинг для версии API v1
 func addRoutesV1(v1Router fiber.Router, authHandlers *handlers.AuthHandlers, kuboHandlers *handlers.KuboHandlers,
-	logger *logger.Logger) fiber.Router {
+	nftHandlers *handlers.NftHandlers, logger *logger.Logger) fiber.Router {
 	authMiddleware := httpmiddlewares.NewAuthMiddleware(checkAuthToken(logger), false, logger)
 	//guestMiddleware := httpmiddlewares.NewAuthMiddleware(checkAuthToken(logger), true, logger)
 
-	// системные урлы
-
-	idm := v1Router.Group("/auth")
+	auth := v1Router.Group("/auth")
 
 	// публичные методы
-	idm.Post("/registration/", httputils.FiberJSONWrapper(authHandlers.Registration))
-	idm.Post("/login/", httputils.FiberJSONWrapper(authHandlers.Login))
-	idm.Post("/refresh/", httputils.FiberJSONWrapper(authHandlers.Refresh))
-	idm.Post("/recovery/", httputils.FiberJSONWrapper(authHandlers.Recovery))
-	idm.Post("/ping/", httputils.FiberJSONWrapper(authHandlers.Ping))
+	auth.Post("/registration/", httputils.FiberJSONWrapper(authHandlers.Registration))
+	auth.Post("/login/", httputils.FiberJSONWrapper(authHandlers.Login))
+	auth.Post("/refresh/", httputils.FiberJSONWrapper(authHandlers.Refresh))
+	auth.Post("/recovery/", httputils.FiberJSONWrapper(authHandlers.Recovery))
+	auth.Post("/ping/", httputils.FiberJSONWrapper(authHandlers.Ping))
 
 	// методы под авторизацией
-	idmProtected := idm.Group("")
-	idmProtected = idmProtected.Use(authMiddleware)
-	idmProtected.Post("/logout/", httputils.FiberJSONWrapper(authHandlers.Logout))
-	idmProtected.Post("/delete_user/", httputils.FiberJSONWrapper(authHandlers.DeleteUser))
-	idmProtected.Post("/digup_user/", httputils.FiberJSONWrapper(authHandlers.DigupUser))
-	idmProtected.Post("/update/", httputils.FiberJSONWrapper(authHandlers.UpdateUser))
-	idmProtected.Post("/change_role/", httputils.FiberJSONWrapper(authHandlers.ChangeRole))
-	idmProtected.Post("/reset_token/", httputils.FiberJSONWrapper(authHandlers.ResetToken))
+	authProtected := auth.Group("")
+	authProtected = authProtected.Use(authMiddleware)
+	authProtected.Post("/logout/", httputils.FiberJSONWrapper(authHandlers.Logout))
+	authProtected.Post("/delete_user/", httputils.FiberJSONWrapper(authHandlers.DeleteUser))
+	authProtected.Post("/digup_user/", httputils.FiberJSONWrapper(authHandlers.DigupUser))
+	authProtected.Post("/update/", httputils.FiberJSONWrapper(authHandlers.UpdateUser))
+	authProtected.Post("/change_role/", httputils.FiberJSONWrapper(authHandlers.ChangeRole))
+	authProtected.Post("/reset_token/", httputils.FiberJSONWrapper(authHandlers.ResetToken))
 
 	// методы сервиса UPS
-	api := v1Router.Group("/api/v1")
+	api := v1Router.Group("/api")
 	api.Get("/pins", handlers.ListPinsHandler)
+	api.Post("/nft_data", httputils.FiberJSONWrapper(nftHandlers.CreateNftData))
 
-	apiProtected := v1Router.Group("/api/v1", authMiddleware)
+	apiProtected := v1Router.Group("", authMiddleware)
+	//apiProtected.Post("/nft_data", httputils.FiberJSONWrapper(nftHandlers.CreateNftData))
+
 	apiProtected.Post("/files", handlers.UploadFileHandler)
 	// Маршруты для управления закреплением (pin)
 	apiProtected.Post("/pins/:cid", handlers.PinCidHandler)
