@@ -41,4 +41,7 @@ type UserRepository interface {
 
 type NftDataRepository interface {
 	CreateNftData(ctx context.Context, nftData *dto.NftData) error
+	ReadNftData(ctx context.Context, tokenId int64) (models.NftDataModel, error)
+	ReadAllNftData(ctx context.Context, limit int) ([]models.NftDataModel, error)
+	TokenIdExists(ctx context.Context, tokenId int64) (bool, error)
 }

@@ -108,13 +108,14 @@ func addRoutesV1(v1Router fiber.Router, authHandlers *handlers.AuthHandlers, kub
 	authProtected.Post("/change_role/", httputils.FiberJSONWrapper(authHandlers.ChangeRole))
 	authProtected.Post("/reset_token/", httputils.FiberJSONWrapper(authHandlers.ResetToken))
 
-	// методы сервиса UPS
+	// методы сервиса API
 	api := v1Router.Group("/api")
 	api.Get("/pins", handlers.ListPinsHandler)
-	api.Post("/nft_data", httputils.FiberJSONWrapper(nftHandlers.CreateNftData))
+	api.Get("/nft/:id", httputils.FiberJSONWrapper(nftHandlers.ReadNft))
+	api.Get("/nft/all/:limit", httputils.FiberJSONWrapper(nftHandlers.ReadAllNft))
 
 	apiProtected := v1Router.Group("", authMiddleware)
-	//apiProtected.Post("/nft_data", httputils.FiberJSONWrapper(nftHandlers.CreateNftData))
+	api.Post("/nft_data", httputils.FiberJSONWrapper(nftHandlers.CreateNftData))
 
 	apiProtected.Post("/files", handlers.UploadFileHandler)
 	// Маршруты для управления закреплением (pin)

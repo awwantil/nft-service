@@ -13,7 +13,7 @@ import (
 )
 
 const kuboApiBaseUrl = "http://127.0.0.1:5001/api/v0"
-const kuboGatewayUrlTemplate = "http://%s.ipfs.localhost:8080/"
+const KuboGatewayUrlTemplate = "http://%s.ipfs.localhost:8080/"
 
 // AddFileToIPFS загружает файл в узел Kubo и возвращает информацию о нем.
 func AddFileToIPFS(fileHeader *multipart.FileHeader) (*models.AddResponse, string, string, error) {
@@ -68,7 +68,7 @@ func AddFileToIPFS(fileHeader *multipart.FileHeader) (*models.AddResponse, strin
 	}
 
 	cidV1 := cid.NewCidV1(cid.DagProtobuf, cidV0.Hash())
-	gatewayURL := fmt.Sprintf(kuboGatewayUrlTemplate, cidV1.String())
+	gatewayURL := fmt.Sprintf(KuboGatewayUrlTemplate, cidV1.String())
 
 	return &addResp, cidV1.String(), gatewayURL, nil
 }
